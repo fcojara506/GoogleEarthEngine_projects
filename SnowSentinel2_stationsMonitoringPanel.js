@@ -67,7 +67,7 @@ function addImageToMaps(image, style, name, maps) {
       var label_name = ui.Label('Loading...');
       label_names.push(label_name);
       map.add(label_name); // add label to each map
-      map.setControlVisibility(false); // show map layer ticks
+      map.setControlVisibility(false); // show map layers
       
       // Clip the image to the region of interest (ROI) and add it to the map
       map.addLayer(image.clip(roi), style, name);
@@ -82,6 +82,9 @@ function addImageToMaps(image, style, name, maps) {
   } else {
     for (var j = 0; j < 7; j++) {
       map = maps[j];
+      removeLayer('Puntos',map)
+      removeLayer(name,map)
+  
       name_station = names.get(j);
       coords = Region2.filter(ee.Filter.eq('Nombre', name_station)).first();
       roi = coords.geometry().buffer(1000); // Buffer of 1 km around the coords
@@ -237,12 +240,15 @@ var combinedSubtitle = ui.Label({
   }
 });
 
+
 var subtitle6 = ui.Label({
-  value: 'Created by Francisco Jara. University of Chile (2021). Source code available at: https://github.com/fcojara506/GoogleEarthEngine_projects ',
+  value: 'Created by Francisco Jara. University of Chile (2021). Source code available on: https://github.com/fcojara506/GoogleEarthEngine_projects',
   style: {
-    margin: '0px 0 0px 10px'
+    margin: '0px 0 0px 10px',
+    color: 'blue', // Optional: Set the color to blue to make it look like a link
   }
 });
+subtitle6.setUrl('https://github.com/fcojara506/GoogleEarthEngine_projects');
 
 ui.root.widgets().reset([title, combinedSubtitle, mapGrid, subtitle6]);
 ui.root.setLayout(ui.Panel.Layout.Flow('vertical'));
