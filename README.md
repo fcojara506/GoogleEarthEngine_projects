@@ -13,5 +13,5 @@ https://franciscojara.users.earthengine.app/view/pronosticogfs
 
 
 fSCA spatial and temporal timeseries using MODIS Aqua and Terra, filter of cloudy days using ERA5-Land precipitation.
-https://franciscojara.users.earthengine.app/view/pronosticogfs
+https://github.com/fcojara506/GoogleEarthEngine_projects/blob/main/FractionSnowCoverAreaTimeSeries_shapefileMaule_v2.js
 ![snow](https://github.com/fcojara506/GoogleEarthEngine_projects/blob/main/images/fsca_cloudless_timeseries.png)
