@@ -9,3 +9,9 @@ https://franciscojara.users.earthengine.app/view/snowmonitor
 global visualisation of GFS precipition
 https://franciscojara.users.earthengine.app/view/pronosticogfs
 ![snow](https://github.com/fcojara506/GoogleEarthEngine_projects/blob/main/images/GFS_forecast_global.png)
+
+
+
+fSCA spatial and temporal timeseries using MODIS Aqua and Terra, filter of cloudy days using ERA5-Land precipitation.
+https://franciscojara.users.earthengine.app/view/pronosticogfs
+![snow](https://github.com/fcojara506/GoogleEarthEngine_projects/blob/main/images/fsca_cloudless_timeseries.png)
