@@ -15,7 +15,12 @@ V1.0: RELLENO TEMPORAL Y ESPACIAL DE MODIS MOD10A1 Y MYD10A1 PARA YERBA LOCA
 CON PRECIPITACION CARGADA DE GOOGLE FUSION TABLE.
 
 V1.1 IMPLEMENTACION DE PROMEDIO TEMPORAL Y ESPACIAL DE LAS 
-SERIES DE TIEMPO. 
+SERIES DE TIEMPO. CARGA DE PRECIPITACIONES USANDO CSV 
+CON DATOS DE ESTACIONES METEOROLOGICAS
+
+V1.2 INCLUYE LA PRECIPITACION DE ERA5-LAND COMO SERIE DE TIEMPO.
+
+RESULTADOS:
 EXPORTACION DE IMAGENES DE FSCA PROMEDIO TOTAL DEL PERIODO.
 EXPORTACION DE SERIE DE TIEMPO DEL PROMEDIO ESPACIAL EN '*.CSV'.
 _____________________________________________________________________
@@ -30,20 +35,46 @@ EL ARCHIVO SHAPEFILE SE CARGA EN ASSETS Y DEBE ESTAR EN EPGS 4326 (WGS84)
 #####################################################################
 */
 
+// 1. Replace the hardcoded shapefile path with a placeholder variable for the uploaded shapefile path
+var UPLOADED_SHAPEFILE_PATH = "users/franciscojara/cuencas_pronostico2019_4326";
+
+// 2. Add a function to load the shapefile from the uploaded path
+function loadShapefile(shapefilePath) {
+  return ee.FeatureCollection(shapefilePath);
+}
+
+var Region = loadShapefile(UPLOADED_SHAPEFILE_PATH);
+
 // Set variables
 var BASIN_NAME = "MAULE_EXTENDIDO";
-var Region = ee.FeatureCollection("users/franciscojara/cuencas_pronostico2019_4326");
-var precipitation = ee.FeatureCollection("users/franciscojara/precipitacion/pp_2001_2020_MAULE")
-  .sort('system:time_start')
-  .map(function(feature) {
-    var num = ee.Number.parse(feature.get('precipitacion'));
-    var date = ee.Date(feature.get('system:time_start'));
-    return feature.set('system:time_start', date).set('precipitacion', num);
-  });
-var start = ee.Date('2002-05-01');
-var finish = ee.Date('2002-07-30');
+
+
+
+var start = ee.Date('2022-01-01');
+var finish = ee.Date('2023-07-30');
 var BOOLEAN_TIMESERIES_CHART = true;
 var threshold = 10;
+
+var precipitation = ee.ImageCollection('ECMWF/ERA5_LAND/DAILY')
+  .select('total_precipitation')
+  .filterBounds(Region)
+  .filterDate(start, finish)
+  .map(function(image) {
+    var date = ee.Date(image.get('system:time_start'));
+    var mean_precipitation = image.reduceRegion({
+      reducer: ee.Reducer.mean(),
+      geometry: Region,
+      scale: 500
+    }).get('total_precipitation');
+    return ee.Feature(null, {
+      'system:time_start': date,
+      'date': date.format('Y/M/d'),
+      'precipitacion': mean_precipitation
+    });
+  });
+
+  
+
 
 // Load MODIS images
 var Terra = ee.ImageCollection("MODIS/006/MOD10A1").filterDate(start, finish);
@@ -127,19 +158,7 @@ var invertedJoined = ee.Join.inverted().apply(Terra.map(maskSNOW
   region: Region
   });
   
-  var n_days = finish.difference(start,'day');
-  var modis_count = modis2.map(function(image) {
-  return image.gte(threshold).clip(Region).divide(n_days);
-  }).sum().toDouble();
-  Export.image.toDrive({
-  image: modis_count,
-  description: 'MapafSCA_Dias_'+BASIN_NAME+'_'+today+'_threshold'+threshold,
-  folder: "GEE",
-  maxPixels: 67000000000,
-  scale: 500,
-  region: Region
-  });
-  
+
   var temp_mean_modis2 = modis2.map(createTS);
   if (BOOLEAN_TIMESERIES_CHART) {
   var graph = ui.Chart.feature.byFeature(temp_mean_modis2, 'system:time_start', 'value');
@@ -160,5 +179,4 @@ var invertedJoined = ee.Join.inverted().apply(Terra.map(maskSNOW
   
   // Plot a sample day
   var snowCoverVis = {min: 0.0, max: 100, palette: ['black','0dffff','0524ff','ffffff']};
-  Map.addLayer(modis2.filterDate(ee.Date('2002-06-19')).first(), snowCoverVis, 'MODIS ejemplo junio');
-  Map.addLayer(modis2.filterDate(ee.Date('2002-05-08')).first(), snowCoverVis, 'MODIS ejemplo mayo');
+  Map.addLayer(spatial_mean_modis2, snowCoverVis, 'PROMEDIO FSCA');
